@@ -133,7 +133,7 @@ int main()
                 break;
             }
 
-            sleep_ms(500); //Analog clock 1s
+            sleep_ms(1000); //Analog clock 1s
         }
     }
 
