@@ -10,7 +10,8 @@
 #define PIN_TOUCH 14
 
 #define TEXT_BUF_SIZE 16
-#define COUNTDOWN_MIN 5
+#define REFRESH_SLEEP_SEC 60
+#define REFRESH_SEGMENTS 4
 
 void blink(UBYTE amount, UDOUBLE time)
 {
@@ -94,46 +95,28 @@ int main()
         Paint_DrawString_EN(30, 5 + (2 * Font24.Height) + (3 * Font20.Height), "-Pressure-", &Font20, WHITE, BLACK); // Pressure
         Paint_DrawString_EN(50, 5 + (2 * Font24.Height) + (4 * Font20.Height), pString, &Font20, WHITE, BLACK);      // Pressure value
 
+        Paint_DrawRectangle(1, 180, 199, 200, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY); // Timer bar
+
         EPD_1IN54_V2_Display(ImageBuffer);
 
         // Timer countdown //
 
         EPD_1IN54_V2_DisplayPartBaseImage(ImageBuffer);
 
-        PAINT_TIME sPaint_time;
-        sPaint_time.Hour = 0; // not used
-        sPaint_time.Min = COUNTDOWN_MIN;
-        sPaint_time.Sec = 1;
-        for (;;)
+        for (int i = 1; i <= REFRESH_SLEEP_SEC; i++)
         {
-
-            if (sPaint_time.Sec == 0)
-            {
-                if (sPaint_time.Min > 0)
-                {
-                    sPaint_time.Min = sPaint_time.Min - 1;
-                    sPaint_time.Sec = 59;
-                }
+            if (i % (REFRESH_SLEEP_SEC / REFRESH_SEGMENTS) == 0) {
                 Paint_ClearWindows(0, 180, 200, 200, WHITE);
-                Paint_DrawRectangle(0, 180, 200 / COUNTDOWN_MIN * (COUNTDOWN_MIN - sPaint_time.Min - 1), 200, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+                Paint_DrawRectangle(0, 180, (int) (200 / ((double) REFRESH_SLEEP_SEC / i)), 200, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
                 Paint_DrawRectangle(1, 180, 199, 200, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
                 EPD_1IN54_V2_DisplayPart(ImageBuffer);
                 EPD_1IN54_V2_Sleep();
             }
-            else
-            {
-                sPaint_time.Sec = sPaint_time.Sec - 1;
-            }
 
             int touch = gpio_get(PIN_TOUCH);
-            //printf("Touch: %d\n", touch);
+            if (touch == 1) break;
 
-            if ((sPaint_time.Min == 0 && sPaint_time.Sec == 0) || touch == 1)
-            {
-                break;
-            }
-
-            sleep_ms(1000); //Analog clock 1s
+            sleep_ms(1000);
         }
     }
 
